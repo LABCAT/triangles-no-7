@@ -8,6 +8,9 @@ import PlayIcon from './functions/PlayIcon.js';
 import audio from "../audio/triangles-no-7.ogg";
 import midi from "../audio/triangles-no-7.mid";
 import SpinningTriangle from "./classes/SpinningTriangle.js";
+import BackgroundTriangle from "./classes/BackgroundTriangle.js";
+import SpinningTriangle2 from "./classes/SpinningTriangle2.js";
+import TriangleGlyph from "./classes/TriangleGlyph.js";
 
 /**
  * Glyphs No. 3
@@ -29,14 +32,20 @@ const P5SketchWithAudio = () => {
 
         p.PPQ = 3840 * 4;
 
-        p.bpm = 112.444;
+        p.bpm = 88;
 
         p.loadMidi = () => {
             Midi.fromUrl(midi).then(
                 function(result) {
                     console.log(result);
                     const noteSet1 = result.tracks[14].notes; // Combinator - Percussve Monks
-                    p.scheduleCueSet(noteSet1, 'executeCueSet1', true);
+                    p.scheduleCueSet(noteSet1, 'executeCueSet1');
+                    const noteSet2 = result.tracks[10].notes; // Wave Layers Edition - PPG Bass
+                    p.scheduleCueSet(noteSet2, 'executeCueSet2');
+                    const noteSet3 = result.tracks[12].notes; // Combinator - Percussve Monks
+                    p.scheduleCueSet(noteSet3, 'executeCueSet3');
+                    const noteSet4 = result.tracks[7].notes; // Europa - Fifth Drops Poly
+                    p.scheduleCueSet(noteSet4, 'executeCueSet4');
                     p.audioLoaded = true;
                     document.getElementById("loader").classList.add("loading--complete");
                     document.getElementById("play-icon").classList.remove("fade-out");
@@ -81,25 +90,34 @@ const P5SketchWithAudio = () => {
         p.draw = () => {
             if(p.audioLoaded && p.song.isPlaying()){
                 p.background(p.bgHue, 100, 50, p.bgOpacity);
-                 for (let i = 0; i < p.spinningTriangles1.length; i++) {
+
+                for (let i = 0; i < p.backgroundTriangles.length; i++) {
+                    const triangle = p.backgroundTriangles[i];
+                    triangle.update();
+                    triangle.draw();
+                }
+
+                for (let i = 0; i < p.spinningTriangles1.length; i++) {
                     const triangle = p.spinningTriangles1[i];
                     triangle.update();
                     triangle.draw();
+                }
+
+                for (let i = 0; i < p.animatedGlyphs.length; i++) {
+                    const glyph = p.animatedGlyphs[i];
+                    glyph.update();
+                    glyph.draw();
                 }
             }
         }
 
         p.spinningTriangles1 = [];
 
-        p.executeCueSet1 = (note) => {
-            if(note.currentCue % 47 === 1) {
-                p.bgHue = p.random(0, 360);
-                p.spinningTriangles1 = []; // Reset the triangles array
-            }
-
+        p.addSpinningTriangle = (note, variation = false) => {
             let x = p.random(p.width / 24, p.width - p.width / 24);
-            let y = p.random(p.width / 24, (p.height / 2) - p.width / 24);
+            let y = p.random(p.width / 24, p.height - p.width / 24);
             let width = p.random(p.width / 48, p.width / 32);
+            let hue = p.map(note.midi, 12, 60, 0, 360)
 
             const minWidth = p.width / 64; 
             const maxAttempts = 10;
@@ -122,7 +140,7 @@ const P5SketchWithAudio = () => {
                 if (overlap) {
                     width *= 0.9; // Decrease the size if overlap is detected
                     x = p.random(p.width / 24, p.width - p.width / 24); // Try new X
-                    y = p.random(p.width / 24, (p.height / 2) - p.width / 24); // Try new Y
+                    y = p.random(p.width / 24, p.height - p.width / 24); // Try new Y
                     if (width < minWidth) break; // Exit the loop if the size is too small
                 }
 
@@ -130,21 +148,80 @@ const P5SketchWithAudio = () => {
             }
 
             if (!overlap) {
-                p.spinningTriangles1.push(new SpinningTriangle(p, x, y, width));
+                const className = variation ? SpinningTriangle2 : SpinningTriangle;
+                p.spinningTriangles1.push(
+                    new className(p, x, y, width, hue)
+                );
             }
         }
 
+        p.executeCueSet1 = (note) => {
+            if(note.currentCue % 47 === 1) {
+                p.bgHue = p.random(0, 360);
+                p.spinningTriangles1 = []; 
+            }
+
+            if(note.currentCue < 48) {
+                p.addSpinningTriangle(note);
+            }
+        }
+
+        p.backgroundTriangles = [];
+
+        p.backgroundTrianglesNextSize = undefined;
 
         p.executeCueSet2 = (note) => {
-                
+            const size = !p.backgroundTrianglesNextSize ? Math.min(p.width, p.height) : p.backgroundTrianglesNextSize;
+            p.backgroundTriangles.push(
+                new BackgroundTriangle(
+                    p,
+                    p.width / 2,
+                    p.height / 2,
+                    size,
+                    p.map(note.midi, 12, 60, 0, 360)
+                )
+            );
+
+            p.backgroundTrianglesNextSize = size * 0.9;
         }
 
         p.executeCueSet3 = (note) => {
-          
+            const pos = p.getBarAndBeat(note.ticks)
+            if([5, 9, 13, 17].includes(pos.bar) && pos.beat === 1 && pos.semiquaver === 1) {
+                p.bgHue = p.random(0, 360);
+                p.spinningTriangles1 = []; 
+            }
+
+            console.log(pos);
+            
+            p.addSpinningTriangle(note, true);
         }
 
+        p.animatedGlyphs = [];
+
         p.executeCueSet4 = (note) => {
-            
+            // const { currentCue, midi }  = note;
+            const variation = p.random(-p.width / 24, p.width / 24);
+            const x = p.width / 2 + variation;
+            const y = p.height / 2  + variation;
+            const size = p.random(p.width / 32, p.width / 64);
+            const maxSize = p.width / 16;
+            const intervalPerNote = 20;
+
+            for (let index = 0; index < 8; index++) {
+                setTimeout(() => {
+                    p.animatedGlyphs.push(
+                        new TriangleGlyph(
+                            p, 
+                            x, 
+                            y, 
+                            maxSize, 
+                            size, 
+                            false
+                        )
+                    );
+                }, intervalPerNote * index);
+            }
         }
 
         p.executeCueSet5 = (note) => {
@@ -152,6 +229,18 @@ const P5SketchWithAudio = () => {
         };
 
         p.hasStarted = false;
+
+        p.getBarAndBeat = (ticks) => {
+            const beatsPerBar = 4;
+            const ticksPerBeat = p.PPQ;
+            const ticksPerSemiquaver = ticksPerBeat / 4; // Semiquaver = 1/16th note
+            const totalBeats = ticks / ticksPerBeat;
+            const barNumber = Math.floor(totalBeats / beatsPerBar) + 1;
+            const beatWithinBar = Math.floor(totalBeats % beatsPerBar) + 1;
+            const semiquaverPosition = Math.floor((ticks % ticksPerBeat) / ticksPerSemiquaver) + 1;
+
+            return { bar: barNumber, beat: beatWithinBar, semiquaver: semiquaverPosition };
+        };
 
         p.mousePressed = () => {
             if(p.audioLoaded){

@@ -1,9 +1,9 @@
 export default class SpinningTriangle {
-    constructor(p5, x, y, width) {
+    constructor(p5, x, y, width, hue) {
         this.p = p5;
         this.x = x;
         this.y = y;
-        this.hue = this.p.random(0, 360);
+        this.hue = hue;
         this.width = width / 4;
         this.maxWidth = width;
         this.rotation = 0;
@@ -34,7 +34,7 @@ export default class SpinningTriangle {
         this.p.rotate(this.rotation);
 
         // Draw the first triangle
-        this.p.strokeWeight(4);
+        this.p.strokeWeight(2);
         this.p.stroke(this.hue, 0, 100);
         this.p.fill(this.hue, 100, 100, 0.25);
         this.p.triangle(x1, y1, x2, y2, x3, y3);
