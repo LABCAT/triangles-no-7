@@ -3,15 +3,15 @@ import ShuffleArray from '../functions/ShuffleArray.js';
 
 export default class TriangleGlyph extends AnimatedGlyph {
 
-    constructor(p5, x, y, width, startWidth, darkMode) {
-        super(p5, x, y, width, startWidth);
+    constructor(p5, x, y, width, startWidth, lifetime) {
+        super(p5, x, y, width, startWidth, lifetime);
         this.hueSet = ShuffleArray([30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360]);
         this.hue1 = this.hueSet[0];
         this.hue2 = this.hueSet[1];
         this.hue3 = this.hueSet[2];
         this.hue4 = this.hueSet[3];
-        this.stroke = darkMode ? p5.color(0, 0, 0) : p5.color(0, 0, 100);
-        this.endTime = this.startTime + this.lifeTime + 1000;
+        this.stroke = p5.color(0, 0, 100);
+        this.endTime = this.startTime + this.lifeTime;
     }
 
     drawTriangle(size, hue) {
@@ -23,8 +23,6 @@ export default class TriangleGlyph extends AnimatedGlyph {
         const x3 = size * this.p.cos(240);
         const y3 = size * this.p.sin(240);
 
-        // Draw the triangle
-        this.p.stroke(hue, 100, 70);
         this.p.fill(hue, 100, 100, 0.5);
         this.p.triangle(x1, y1, x2, y2, x3, y3);
     }

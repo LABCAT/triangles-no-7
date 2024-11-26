@@ -116,7 +116,7 @@ const P5SketchWithAudio = () => {
         p.addSpinningTriangle = (note, variation = false) => {
             let x = p.random(p.width / 24, p.width - p.width / 24);
             let y = p.random(p.width / 24, p.height - p.width / 24);
-            let width = p.random(p.width / 48, p.width / 32);
+            let width = p.random(p.width / 32, p.width / 24);
             let hue = p.map(note.midi, 12, 60, 0, 360)
 
             const minWidth = p.width / 64; 
@@ -156,7 +156,8 @@ const P5SketchWithAudio = () => {
         }
 
         p.executeCueSet1 = (note) => {
-            if(note.currentCue % 47 === 1) {
+            const pos = p.getBarAndBeat(note.ticks)
+            if([1, 3, 4].includes(pos.bar) && pos.beat === 1 && pos.semiquaver === 1) {
                 p.bgHue = p.random(0, 360);
                 p.spinningTriangles1 = []; 
             }
@@ -187,28 +188,26 @@ const P5SketchWithAudio = () => {
 
         p.executeCueSet3 = (note) => {
             const pos = p.getBarAndBeat(note.ticks)
-            if([5, 9, 13, 17].includes(pos.bar) && pos.beat === 1 && pos.semiquaver === 1) {
+            if([5, 7, 9, 13, 15, 17].includes(pos.bar) && pos.beat === 1 && pos.semiquaver === 1) {
                 p.bgHue = p.random(0, 360);
                 p.spinningTriangles1 = []; 
             }
 
-            console.log(pos);
-            
             p.addSpinningTriangle(note, true);
         }
 
         p.animatedGlyphs = [];
 
         p.executeCueSet4 = (note) => {
-            // const { currentCue, midi }  = note;
-            const variation = p.random(-p.width / 24, p.width / 24);
-            const x = p.width / 2 + variation;
-            const y = p.height / 2  + variation;
-            const size = p.random(p.width / 32, p.width / 64);
-            const maxSize = p.width / 16;
-            const intervalPerNote = 20;
+            const maxSize = p.width / 64;
+            const duration = (note.durationTicks * 60000) / (p.PPQ * p.bpm)
+            const triCount = 48;
+            const intervalPerTri = (duration * 0.8) / triCount;
 
-            for (let index = 0; index < 8; index++) {
+            for (let index = 0; index < triCount; index++) {
+                const x = p.width / 2;
+                const y = p.height / 2;
+                const size = p.random(p.width / 256, p.width / 128);
                 setTimeout(() => {
                     p.animatedGlyphs.push(
                         new TriangleGlyph(
@@ -217,16 +216,12 @@ const P5SketchWithAudio = () => {
                             y, 
                             maxSize, 
                             size, 
-                            false
+                            duration
                         )
                     );
-                }, intervalPerNote * index);
+                }, intervalPerTri * index);
             }
         }
-
-        p.executeCueSet5 = (note) => {
-           
-        };
 
         p.hasStarted = false;
 

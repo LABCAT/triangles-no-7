@@ -20,7 +20,6 @@ export default class BackgroundTriangle {
         const y3 = this.width * this.p.sin(240);
 
         this.p.translate(this.x, this.y);
-
         this.p.rotate(30);
         this.p.stroke(this.hue, 0, 100);
         this.p.fill(this.hue, 100, 100, 0.25);
