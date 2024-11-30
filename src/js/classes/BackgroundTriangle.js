@@ -3,12 +3,12 @@ export default class BackgroundTriangle {
         this.p = p5;
         this.x = x;
         this.y = y;
-        this.width = width / 32;
+        this.width = width / 16;
         this.hue = hue;
     }
 
     update() {
-        this.width = this.width + (Math.random() * 8);
+        this.width = this.width + 8;
     }
 
     draw() {
@@ -22,6 +22,7 @@ export default class BackgroundTriangle {
         this.p.translate(this.x, this.y);
         this.p.rotate(30);
         this.p.stroke(this.hue, 0, 100);
+        this.p.strokeWeight(4);
         this.p.fill(this.hue, 100, 100, 0.25);
         this.p.triangle(x1, y1, x2, y2, x3, y3);
         this.p.rotate(-30);

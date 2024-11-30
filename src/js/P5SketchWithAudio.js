@@ -113,11 +113,15 @@ const P5SketchWithAudio = () => {
 
         p.spinningTriangles1 = [];
 
+        p.lowerHue = 0;
+
+        p.upperHue = 360;
+
         p.addSpinningTriangle = (note, variation = false) => {
             let x = p.random(p.width / 24, p.width - p.width / 24);
             let y = p.random(p.width / 24, p.height - p.width / 24);
             let width = p.random(p.width / 32, p.width / 24);
-            let hue = p.map(note.midi, 12, 60, 0, 360)
+            let hue = p.map(note.midi, 12, 60, p.lowerHue, p.upperHue);
 
             const minWidth = p.width / 64; 
             const maxAttempts = 10;
@@ -131,7 +135,7 @@ const P5SketchWithAudio = () => {
                 for (let i = 0; i < p.spinningTriangles1.length; i++) {
                     const triangle = p.spinningTriangles1[i];
                     const dist = p.dist(x, y, triangle.x, triangle.y);
-                    if (dist < width * 1.5) { // If triangles are too close
+                    if (dist < width * 1) { // If triangles are too close
                         overlap = true;
                         break;
                     }
@@ -159,7 +163,9 @@ const P5SketchWithAudio = () => {
             const pos = p.getBarAndBeat(note.ticks)
             if([1, 3, 4].includes(pos.bar) && pos.beat === 1 && pos.semiquaver === 1) {
                 p.bgHue = p.random(0, 360);
-                p.spinningTriangles1 = []; 
+                p.spinningTriangles1 = [];
+                p.lowerHue = p.random(0, 120);
+                p.upperHue = p.random(240, 360);
             }
 
             if(note.currentCue < 48) {
@@ -172,28 +178,55 @@ const P5SketchWithAudio = () => {
         p.backgroundTrianglesNextSize = undefined;
 
         p.executeCueSet2 = (note) => {
-            const size = !p.backgroundTrianglesNextSize ? Math.min(p.width, p.height) : p.backgroundTrianglesNextSize;
+            let size = !p.backgroundTrianglesNextSize ? Math.min(p.width, p.height) : p.backgroundTrianglesNextSize;
             p.backgroundTriangles.push(
                 new BackgroundTriangle(
                     p,
                     p.width / 2,
                     p.height / 2,
                     size,
-                    p.map(note.midi, 12, 60, 0, 360)
+                    p.random(p.random(0, 60), p.random(300, 360))
                 )
             );
+
+            if(note.currentCue > 4) {
+                for (let i = 1; i < 8; i++) {
+                    setTimeout(
+                        () => {
+                            size = size * 0.2;
+                            p.backgroundTriangles.push(
+                                new BackgroundTriangle(
+                                    p,
+                                    p.width / 2,
+                                    p.height / 2,
+                                    size,
+                                    p.random(p.random(0, 60), p.random(300, 360))
+                                )
+                            );
+                        }, 
+                        200 * i
+                    );
+                }
+            }
+            console.log(note.currentCue);
+            
 
             p.backgroundTrianglesNextSize = size * 0.9;
         }
 
         p.executeCueSet3 = (note) => {
             const pos = p.getBarAndBeat(note.ticks)
+            
             if([5, 7, 9, 13, 15, 17].includes(pos.bar) && pos.beat === 1 && pos.semiquaver === 1) {
                 p.bgHue = p.random(0, 360);
                 p.spinningTriangles1 = []; 
+                p.lowerHue = p.random(0, 120);
+                p.upperHue = p.random(240, 360);
             }
-
-            p.addSpinningTriangle(note, true);
+            
+            if(note.currentCue <= 64 || note.currentCue > 224) {
+                p.addSpinningTriangle(note, true);
+            }
         }
 
         p.animatedGlyphs = [];
@@ -201,8 +234,8 @@ const P5SketchWithAudio = () => {
         p.executeCueSet4 = (note) => {
             const maxSize = p.width / 64;
             const duration = (note.durationTicks * 60000) / (p.PPQ * p.bpm)
-            const triCount = 48;
-            const intervalPerTri = (duration * 0.8) / triCount;
+            const triCount = 128;
+            const intervalPerTri = (duration * 0.68) / triCount;
 
             for (let index = 0; index < triCount; index++) {
                 const x = p.width / 2;
