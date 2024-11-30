@@ -208,8 +208,6 @@ const P5SketchWithAudio = () => {
                     );
                 }
             }
-            console.log(note.currentCue);
-            
 
             p.backgroundTrianglesNextSize = size * 0.9;
         }
